@@ -87,8 +87,7 @@ app.get('/dashboard', (req, res) => {
 // -delete an owner
 
 
-// POST/GET/UPDATE or  DELETE
-// ROUTE
+
 //Get all dogs
 app.get('/dogs', (req,res) =>{
  connection.query('SELECT * from dogs', (err,results) => {
@@ -96,12 +95,10 @@ app.get('/dogs', (req,res) =>{
      res.json(results)
 
  })
-    // res.send("Show all dogs")
+
 })
 
-//
-// INSERT INTO dogs (name, date_missing, breed, status, date_found, sex)
-// VALUES ('Buddy', '2025-04-07', 'Labrador', 'missing', NULL, 'M');
+
 
 
 //create a new dog
