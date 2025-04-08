@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Dog Case Manager</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        form {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, select {
+            margin-bottom: 10px;
+            padding: 5px;
+        }
+        button {
+            padding: 6px 12px;
+            margin-top: 5px;
+        }
+        .dog-entry {
+            border-bottom: 1px solid #ddd;
+            padding: 8px 0;
+        }
+        .stats {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Dog Case Manager 🐾</h1>
+
+<!-- Add Dog Form -->
+<form id="dogForm">
+    <h2>Add a Dog Case</h2>
+    <label>Name: <input type="text" name="name" required /></label>
+    <label>Date Missing: <input type="date" name="date_missing" /></label>
+    <label>Breed: <input type="text" name="breed" /></label>
+    <label>Status:
+        <select name="status">
+            <option value="missing">Missing</option>
+            <option value="found">Found</option>
+        </select>
+    </label>
+    <label>Date Found: <input type="date" name="date_found" /></label>
+    <label>Sex:
+        <select name="sex">
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+        </select>
+    </label>
+    <button type="submit">Add Dog</button>
+</form>
+
+<!-- Filters and Stats -->
+<div class="filters">
+    <h2>Filters & Stats</h2>
+    <button onclick="fetchAllDogs()">Show All Dogs</button>
+    <button onclick="filterMissingDogs()">Show Missing Dogs</button>
+    <button onclick="filterFoundThisMonth()">Dogs Found This Month</button>
+    <button onclick="calculateSuccessRate()">Case Success Rate</button>
+</div>
+
+<!-- Results -->
+<div id="results"></div>
+<div class="stats" id="stats"></div>
+
+<script>
+    const API_URL = 'http://localhost:3000/dogs';
+    const resultsDiv = document.getElementById('results');
+    const statsDiv = document.getElementById('stats');
+
+    // Add Dog Form Submission
+    document.getElementById('dogForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const formData = new FormData(event.target);
+        const data = Object.fromEntries(formData.entries());
+
+        fetch(API_URL, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data),
+        })
+            .then(response => response.json())
+            .then(() => {
+                event.target.reset();
+                fetchAllDogs();
+            })
+            .catch(error => console.error('Error:', error));
+    });
+
+    // Fetch all dogs
+    function fetchAllDogs() {
+        fetch(API_URL)
+            .then(response => response.json())
+            .then(data => displayDogs(data))
+            .catch(error => console.error('Error:', error));
+    }
+
+    // Filter: Missing dogs
+    function filterMissingDogs() {
+        fetch(API_URL)
+            .then(response => response.json())
+            .then(data => {
+                const missingDogs = data.filter(dog => dog.status && dog.status.toLowerCase() === 'missing');
+                displayDogs(missingDogs);
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    // Filter: Found this month
+    function filterFoundThisMonth() {
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+
+        fetch(API_URL)
+            .then(response => response.json())
+            .then(data => {
+                const foundThisMonth = data.filter(dog => {
+                    if (!dog.date_found) return false;
+                    const foundDate = new Date(dog.date_found);
+                    return foundDate.getMonth() === currentMonth && foundDate.getFullYear() === currentYear;
+                });
+                displayDogs(foundThisMonth);
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    // Calculate success rate
+    function calculateSuccessRate() {
+        fetch(API_URL)
+            .then(response => response.json())
+            .then(data => {
+                const total = data.length;
+                const found = data.filter(dog => dog.status && dog.status.toLowerCase() === 'found').length;
+                const rate = total > 0 ? ((found / total) * 100).toFixed(1) : 0;
+                statsDiv.innerHTML = `<strong>Case Success Rate:</strong> ${rate}% (${found} found out of ${total})`;
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    // Display dogs
+    function displayDogs(dogs) {
+        statsDiv.textContent = ''; // clear stats
+        if (dogs.length === 0) {
+            resultsDiv.innerHTML = '<p>No dogs found.</p>';
+            return;
+        }
+
+        resultsDiv.innerHTML = dogs.map(dog => `
+        <div class="dog-entry">
+          <strong>${dog.name}</strong> (${dog.breed || 'Unknown Breed'})<br/>
+          Status: ${dog.status || 'Unknown'}<br/>
+          Date Missing: ${dog.date_missing || 'N/A'}<br/>
+          Date Found: ${dog.date_found || 'N/A'}<br/>
+          Sex: ${dog.sex || 'N/A'}
+        </div>
+      `).join('');
+    }
+
+    // Initial load
+    fetchAllDogs();
+</script>
+</body>
+</html>
