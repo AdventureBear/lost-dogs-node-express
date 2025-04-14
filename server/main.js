@@ -42,8 +42,11 @@ connection.query(
 );
 
 app.get('/', (req, res) => {
-    res.send('<h1>Welcome to Lost Dog World </h1><p>We help reunite you with your best friend.</p>',)
+    res.send('<h1>Welcome to Lost Dog World </h1><p>We help reunite you with your best friend.</p>' +
+        '<br /><a href="http://localhost:3000/dogs">Search all dogs</a>' )
 })
+
+
 
 app.get('/dashboard', (req, res) => {
     connection.query(
@@ -63,8 +66,8 @@ app.get('/dashboard', (req, res) => {
             ).join('');
 
             let display_html = title + table_start + table_rows + table_end;
-            // res.send(display_html);
-            res.json(results)
+            res.send(display_html);
+            // res.json(results)
         }
     );
 });
@@ -77,14 +80,14 @@ app.get('/dashboard', (req, res) => {
 
 // CRUD each table
 //
-// /owners
-// -adding a new owner
-// -showing all the owners
+// /dogs
+// -adding a new dog
+// -showing all the dogs
 //
-// /owners/:id
-// -showing a single owner
-// -update an owenr
-// -delete an owner
+// /dogs/:id
+// -showing a single dog
+// -update an dog
+// -delete an dog
 
 
 
@@ -110,11 +113,7 @@ connection.query(`INSERT INTO dogs (name, date_missing, breed, status, sex) VALU
         res.json(results)
     }
     );
-
-
     // console.log("Request Body: ", req.body)
-
-
     // res.json(req.body.name)
 })
 
@@ -130,12 +129,29 @@ app.get('/dogs/:id', (req, res) =>{
 
 //Update a dog
 app.patch('/dogs/:id', (req, res) =>{
-    res.send(`updating this dog ${req.params.id} `)
+    const dogId = req.params.id
+    const {name, date_missing, breed, status, date_found, sex} = req.body
+    // UPDATE t1 SET col1 = col1 + 1 WHERE id = ;
+
+    connection.query(`UPDATE dogs SET name="${name}" WHERE id=${dogId}`, (err,results)=>{
+        console.log(`Updating NAME for dog , ${dogId}`)
+        if(err){ console.log(err)}
+
+        res.json(results)
+    })
+
+
 })
 
 //delete a dog
 app.delete('/dogs/:id', (req,res)=>{
-    res.send(`Delete this dog: ${req.params.id}`)
+    const dogId = req.params.id
+    connection.query(`DELETE from dogs WHERE id=${dogId}`, (err,results)=>{
+        console.log("Deleteing dog", dogId)
+        res.json(results)
+    })
+
+    // res.send(`Delete this dog: ${req.params.id}`)
 })
 
 
